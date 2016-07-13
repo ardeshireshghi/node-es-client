@@ -1,0 +1,26 @@
+{
+  "name": "node-es-client",
+  "version": "1.0.0",
+  "description": "Micro Elasticsearch client library for node.js",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "mocha ./test/*.test.js -b -R spec --timeout 10000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ardeshireshghi/node-es-client.git"
+  },
+  "keywords": [
+    "Elasticsearch",
+    "nodejs"
+  ],
+  "author": "Ardeshir Eshghi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ardeshireshghi/node-es-client/issues"
+  },
+  "homepage": "https://github.com/ardeshireshghi/node-es-client#readme",
+  "dependencies": {
+    "lodash": "^4.13.1"
+  }
+}
