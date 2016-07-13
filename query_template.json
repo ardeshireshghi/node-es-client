@@ -1,0 +1,270 @@
+{
+  "size": 0,
+  "query": {
+    "filtered": {
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "bool": {
+                "disable_coord": true,
+                "should": [
+                  {
+                    "match": {
+                      "top_level_title": {
+                        "query": "{{queryKeyword}}",
+                        "type": "phrase",
+                        "operator": "and",
+                        "boost": 50
+                      }
+                    }
+                  },
+                  {
+                    "match": {
+                      "editorialVersion.synopsis": {
+                        "query": "{{queryKeyword}}",
+                        "type": "phrase",
+                        "operator": "and",
+                        "boost": 5
+                      }
+                    }
+                  },
+                  {
+                    "match": {
+                      "editorialVersion.medium_synopsis": {
+                        "query": "{{queryKeyword}}",
+                        "type": "phrase",
+                        "operator": "and",
+                        "boost": 5
+                      }
+                    }
+                  },
+                  {
+                    "match": {
+                      "editorialVersion.long_synopsis": {
+                        "query": "{{queryKeyword}}",
+                        "type": "phrase",
+                        "operator": "and",
+                        "boost": 5
+                      }
+                    }
+                  },
+                  {
+                    "match": {
+                      "editorialVersion.episode.synopsis": {
+                        "query": "{{queryKeyword}}",
+                        "type": "phrase",
+                        "operator": "and",
+                        "boost": 5
+                      }
+                    }
+                  },
+                  {
+                    "match": {
+                      "editorialVersion.episode.medium_synopsis": {
+                        "query": "{{queryKeyword}}",
+                        "type": "phrase",
+                        "operator": "and",
+                        "boost": 5
+                      }
+                    }
+                  },
+                  {
+                    "match": {
+                      "editorialVersion.episode.long_synopsis": {
+                        "query": "{{queryKeyword}}",
+                        "type": "phrase",
+                        "operator": "and",
+                        "boost": 5
+                      }
+                    }
+                  },
+                  {
+                    "match": {
+                      "editorialVersion.episode.parent.synopsis": {
+                        "query": "{{queryKeyword}}",
+                        "type": "phrase",
+                        "operator": "and",
+                        "boost": 1
+                      }
+                    }
+                  },
+                  {
+                    "match": {
+                      "editorialVersion.episode.parent.medium_synopsis": {
+                        "query": "{{queryKeyword}}",
+                        "type": "phrase",
+                        "operator": "and",
+                        "boost": 1
+                      }
+                    }
+                  },
+                  {
+                    "match": {
+                      "editorialVersion.episode.parent.long_synopsis": {
+                        "query": "{{queryKeyword}}",
+                        "type": "phrase",
+                        "operator": "and",
+                        "boost": 1
+                      }
+                    }
+                  },
+                  {
+                    "match": {
+                      "editorialVersion.episode.parent.parent.synopsis": {
+                        "query": "{{queryKeyword}}",
+                        "type": "phrase",
+                        "operator": "and",
+                        "boost": 1
+                      }
+                    }
+                  },
+                  {
+                    "match": {
+                      "editorialVersion.episode.parent.parent.medium_synopsis": {
+                        "query": "{{queryKeyword}}",
+                        "type": "phrase",
+                        "operator": "and",
+                        "boost": 1
+                      }
+                    }
+                  },
+                  {
+                    "match": {
+                      "editorialVersion.episode.parent.parent.long_synopsis": {
+                        "query": "{{queryKeyword}}",
+                        "type": "phrase",
+                        "operator": "and",
+                        "boost": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "query_string": {
+                "default_field": "targetUserGroups.raw",
+                "query": "\"ALLUSERS\" OR \"all\""
+              }
+            },
+            {
+              "query_string": {
+                "default_field": "targetRegions.raw",
+                "query": "\"ENG\" OR \"GBR-ENG\" \"GBR-ENG-LONDON\" OR \"ALLREGIONS\" OR \"all\""
+              }
+            }
+          ]
+        }
+      },
+      "filter": {
+        "and": [
+          {
+            "bool": {
+              "must": {
+                "terms": {
+                  "format": [
+                    "hd",
+                    "sd"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "or": [
+              {
+                "bool": {
+                  "must": [
+                    {
+                      "range": {
+                        "end_time": {
+                          "gte": "2016-05-27T10:40:50.284Z"
+                        }
+                      }
+                    },
+                    {
+                      "term": {
+                        "entity_type": "scheduleevent"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "bool": {
+                  "must": [
+                    {
+                      "range": {
+                        "start_time": {
+                          "lte": "2016-05-27T10:40:50.284Z"
+                        }
+                      }
+                    },
+                    {
+                      "range": {
+                        "end_time": {
+                          "gte": "2016-05-27T10:40:50.284Z"
+                        }
+                      }
+                    },
+                    {
+                      "term": {
+                        "actual_availability": true
+                      }
+                    },
+                    {
+                      "term": {
+                        "entity_type": "ondemandpublication"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "bool": {
+              "must": {
+                "terms": {
+                  "entity_type": [
+                    "scheduleevent",
+                    "ondemandpublication"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "aggs": {
+    "top_level": {
+      "terms": {
+        "field": "top_level_id",
+        "size": 0
+      },
+      "aggs": {
+        "episodeCount": {
+          "terms": {
+            "field": "editorialVersion.episode.id",
+            "size": 0
+          }
+        },
+        "topEpisode": {
+          "top_hits": {
+            "size": 1
+          }
+        }
+      }
+    }
+  },
+  "_source": {
+    "exclude": [
+      "targetUserGroups",
+      "targetRegions",
+      "format"
+    ]
+  }
+}
