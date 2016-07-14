@@ -1,8 +1,8 @@
 #!/usr/bin/env node
+
 var ArgumentParser = require('argparse').ArgumentParser;
 var appVersion = require('./package.json').version;
 var appDescription = require('./package.json').description;
-var elasticsearch = require('./lib/client.js');
 var async = require('async');
 var fs = require('fs');
 var client;
@@ -10,6 +10,8 @@ var concurrency;
 var threadsPerSecond;
 var keywords;
 var queryTemplate;
+var testStartTime;
+var testEndTime;
 
 function getArgParser() {
   var parser = new ArgumentParser({
@@ -21,28 +23,43 @@ function getArgParser() {
   parser.addArgument(
     [ '-f', '--file' ],
     {
-      help: 'Path to file with search query URLS'
+      help: 'Path to file with search query URLS',
+      required: true
     }
   );
 
   parser.addArgument(
     [ '-e', '--endpoint' ],
     {
-      help: 'URL of ES endpoint'
+      help: 'URL of ES endpoint',
+      required: true
     }
   );
 
   parser.addArgument(
     ['-c', '--concurrency' ],
     {
-      help: 'Number of concurrent requests'
+      help: 'Number of concurrent requests',
+      defaultValue: 30,
+      required: false
     }
   );
 
   parser.addArgument(
     ['-t', '--transactions'],
     {
-      help: 'Number of transactions/threads per second'
+      help: 'Number of transactions/threads per second',
+      defaultValue: 30,
+      required: false
+    }
+  );
+
+   parser.addArgument(
+    ['--client'],
+    {
+      help: 'ES client library type e.g (custom, default)',
+      defaultValue: 'default',
+      required: false
     }
   );
 
@@ -55,6 +72,10 @@ function getArgParser() {
  * @return {elasticsearch.Client}
  */
 function createESClient(params) {
+  var clientModulePath = (params.clientType === 'default')
+                      ? 'elasticsearch'
+                      : './lib/client.js';
+  var elasticsearch = require(clientModulePath);
   return new elasticsearch.Client({
     host: {
       protocol: 'http',
@@ -64,8 +85,8 @@ function createESClient(params) {
     httpHandler: {
         agentConfig: {
           keepAlive: true,
-          maxSockets: 30,
-          minSockets: 5
+          maxSockets: 11,
+          minSockets: 10
         }
     }
 
@@ -112,6 +133,9 @@ function performSearchQueries(keywordChunk) {
     }
     if (keywords.length) {
       performSearchQueries(keywords.splice(0, concurrency))
+    } else {
+      testEndTime = Date.now();
+      console.log('Test took: %s seconds', (testEndTime - testStartTime) / 1000);
     }
   });
 }
@@ -121,13 +145,19 @@ function initialise() {
   var args = parser.parseArgs();
   var searchEndpoint = args.endpoint;
 
-  concurrency = parseInt(args.concurrency);
-  threadsPerSecond = parseInt(args.transactions);
+  concurrency = parseInt(args.concurrency, 10);
+  threadsPerSecond = parseInt(args.transactions, 10);
   keywords = getKeywords(args.file);
   queryTemplate = getTemplate();
-  client = createESClient({searchEndpoint: searchEndpoint});
+  client = createESClient({
+    searchEndpoint: searchEndpoint,
+    clientType: args.client
+  });
 
+  testStartTime = Date.now();
   performSearchQueries(keywords.splice(0, concurrency));
 }
+
+module.exports = initialise;
 
 initialise();
